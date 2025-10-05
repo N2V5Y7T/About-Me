@@ -221,7 +221,7 @@
              <p class="text-lg text-gray-400 mb-8 max-w-2xl mx-auto">I'm currently open to new opportunities and collaborations. Feel free to reach out!</p>
              <div id="contact-container">
                 <button id="contact-button" class="glow-button text-white font-bold py-3 px-8 rounded-full transition duration-300 transform hover:scale-105 inline-block">
-                    Say Hello
+                    Contact Me
                 </button>
              </div>
         </section>
@@ -309,9 +309,17 @@
 
                 // Reveal Contact Button
                 const newContactLink = document.createElement('a');
-                newContactLink.href = `mailto:${realEmail}`;
+                const subject = "Inquiry from your Portfolio";
+                const body = "Hello Navjyot,\n\nI saw your portfolio and wanted to reach out regarding...";
+                
+                // This creates a specific link that opens Gmail in a new tab.
+                const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${realEmail}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                
+                newContactLink.href = gmailUrl;
+                newContactLink.target = "_blank"; // This makes it open in a new tab.
+                
                 newContactLink.className = "glow-button text-white font-bold py-3 px-8 rounded-full transition duration-300 transform hover:scale-105 inline-block";
-                newContactLink.textContent = "Say Hello";
+                newContactLink.textContent = "Contact Me";
                 contactContainer.innerHTML = '';
                 contactContainer.appendChild(newContactLink);
 
@@ -470,6 +478,5 @@
     </script>
 </body>
 </html>
-
 
 
