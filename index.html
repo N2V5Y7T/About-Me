@@ -416,4 +416,84 @@
                         if (mouse.x < this.x && this.x < canvas.width - this.size * 10) { this.x += 3; }
                         if (mouse.x > this.x && this.x > this.size * 10) { this.x -= 3; }
                         if (mouse.y < this.y && this.y < canvas.height - this.size * 10) { this.y += 3; }
-                        if (mouse.y > this.y && this.y > this.size * 10
+                        if (mouse.y > this.y && this.y > this.size * 10) { this.y -= 3; }
+                    }
+                    this.x += this.directionX; this.y += this.directionY; this.draw();
+                }
+            }
+            function init() {
+                particlesArray = [];
+                let numberOfParticles = (canvas.height * canvas.width) / 9000;
+                for (let i = 0; i < numberOfParticles; i++) {
+                    let size = (Math.random() * 2) + 1;
+                    let x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
+                    let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
+                    let directionX = (Math.random() * 0.4) - 0.2; let directionY = (Math.random() * 0.4) - 0.2;
+                    particlesArray.push(new Particle(x, y, directionX, directionY, size, '#e0e0e0'));
+                }
+            }
+            function connect() {
+                let opacityValue = 1;
+                for (let a = 0; a < particlesArray.length; a++) {
+                    for (let b = a; b < particlesArray.length; b++) {
+                        let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x)) + ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
+                        if (distance < (canvas.width / 7) * (canvas.height / 7)) {
+                            opacityValue = 1 - (distance / 20000);
+                            ctx.strokeStyle = `rgba(0, 255, 255, ${opacityValue})`;
+                            ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(particlesArray[a].x, particlesArray[a].y); ctx.lineTo(particlesArray[b].x, particlesArray[b].y); ctx.stroke();
+                        }
+                    }
+                }
+            }
+            function animate() { requestAnimationFrame(animate); ctx.clearRect(0, 0, innerWidth, innerHeight); for (let i = 0; i < particlesArray.length; i++) { particlesArray[i].update(); } connect(); }
+            init(); animate();
+            window.addEventListener('resize', () => { canvas.width = innerWidth; canvas.height = innerHeight; mouse.radius = (canvas.height / 120) * (canvas.width / 120); init(); });
+
+            // --- TEXT SCRAMBLE ON SCROLL ---
+            class TextScramble {
+                constructor(el) { this.el = el; this.chars = '!<>-_\\/[]{}—=+*^?#________'; this.update = this.update.bind(this); }
+                setText(newText) {
+                    const oldText = this.el.innerText; const length = Math.max(oldText.length, newText.length);
+                    const promise = new Promise((resolve) => this.resolve = resolve); this.queue = [];
+                    for (let i = 0; i < length; i++) {
+                        const from = oldText[i] || ''; const to = newText[i] || ''; const start = Math.floor(Math.random() * 40);
+                        const end = start + Math.floor(Math.random() * 40); this.queue.push({ from, to, start, end });
+                    }
+                    cancelAnimationFrame(this.frameRequest); this.frame = 0; this.update(); return promise;
+                }
+                update() {
+                    let output = ''; let complete = 0;
+                    for (let i = 0, n = this.queue.length; i < n; i++) {
+                        let { from, to, start, end, char } = this.queue[i];
+                        if (this.frame >= end) { complete++; output += to; } 
+                        else if (this.frame >= start) {
+                            if (!char || Math.random() < 0.28) { char = this.randomChar(); this.queue[i].char = char; }
+                            output += `<span class="opacity-50">${char}</span>`;
+                        } else { output += from; }
+                    }
+                    this.el.innerHTML = output;
+                    if (complete === this.queue.length) { this.resolve(); } 
+                    else { this.frameRequest = requestAnimationFrame(this.update); this.frame++; }
+                }
+                randomChar() { return this.chars[Math.floor(Math.random() * this.chars.length)]; }
+            }
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate');
+                        // TRIGGER TEXT SCRAMBLE AND THEN STOP OBSERVING TO PREVENT GLITCH
+                        if (entry.target.classList.contains('scramble-text')) {
+                            const fx = new TextScramble(entry.target);
+                            fx.setText(entry.target.textContent);
+                            observer.unobserve(entry.target); // IMPORTANT: Runs once then stops
+                        }
+                    }
+                });
+            }, { threshold: 0.2 });
+            const scrollElements = document.querySelectorAll('.scroll-animation, .scramble-text');
+            scrollElements.forEach(el => observer.observe(el));
+        });
+    </script>
+</body>
+</html>
